@@ -27,7 +27,25 @@ jobs:
           gradle-version: "8.7"
 
       - name: Compilar APK de depuración
-        run: gradle :app:assembleDebug --no-daemon --stacktrace
+        id: build
+        run: gradle :app:assembleDebug --no-daemon --stacktrace > /tmp/build_log.txt 2>&1
+        continue-on-error: true
+
+      - name: Si falló, subir el log como archivo en el repo (para poder leerlo)
+        if: steps.build.outcome == 'failure'
+        run: |
+          tail -c 60000 /tmp/build_log.txt > build_log.txt
+          git config user.email "ci@local"
+          git config user.name "CI"
+          git add build_log.txt -f
+          git commit -m "CI: log de build fallido [skip ci]"
+          git push origin HEAD:ci-logs --force
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Marcar el job como fallido si falló la compilación
+        if: steps.build.outcome == 'failure'
+        run: exit 1
 
       - name: Subir el APK como resultado descargable
         uses: actions/upload-artifact@v4
