@@ -24,6 +24,11 @@ jobs:
       - name: Instalar Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Instalar Python 3.10 (lo necesita Chaquopy para resolver las dependencias)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
       - name: Preparar Gradle (sin necesitar wrapper pre-generado)
         uses: gradle/actions/setup-gradle@v4
         with:
